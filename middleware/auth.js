@@ -1,10 +1,28 @@
 const jwt = require('jsonwebtoken');
 //middleware/auth
+
+// The token can arrive as an httpOnly cookie (same-origin setups) or as an
+// Authorization: Bearer header (cross-origin over plain HTTP, where browsers
+// refuse to store the cookie).
+const getTokenFromRequest = (req) => {
+  if (req.cookies && req.cookies.token) {
+    return req.cookies.token;
+  }
+
+  const authHeader = req.headers.authorization || '';
+  if (authHeader.startsWith('Bearer ')) {
+    return authHeader.slice('Bearer '.length);
+  }
+
+  return null;
+};
+
 const getUserIdFromToken = (req) => {
   return new Promise((resolve) => {
-    const token = req.cookies.token;
+    const token = getTokenFromRequest(req);
 
     if (!token) {
+      console.log("no token in cookies or Authorization header")
       resolve(null);
       return;
     }
@@ -21,8 +39,9 @@ const getUserIdFromToken = (req) => {
 
 const requireAuth = async (req, res, next) => {
   const userId = await getUserIdFromToken(req);
-  
+
   if (!userId) {
+    console.log("not authorized")
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -30,4 +49,4 @@ const requireAuth = async (req, res, next) => {
   next();
 };
 
-module.exports = { getUserIdFromToken, requireAuth };
+module.exports = { getTokenFromRequest, getUserIdFromToken, requireAuth };

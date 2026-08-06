@@ -17,18 +17,28 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://13.201.30.11',        // Add your EC2 Public IP
-  'http://127.0.0.1',            // Add local host loopback
+  'http://192.168.56.1:3000',
+  'http://127.0.0.1',
+  'http://43.205.206.238',           // EC2 public IP (frontend on port 80)
   process.env.CLIENT_URL
 ].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
+    console.log("Origin:", origin);
+
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
+
+    if (
+      allowedOrigins.includes(origin) ||
+      /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.56\.1|43\.205\.206\.238)(:\d+)?$/.test(origin)
+    ) {
       return callback(null, true);
     }
-    return callback(new Error('Not allowed by CORS'), false);
+
+    console.log("Blocked Origin:", origin);
+
+    return callback(new Error("Not allowed by CORS"), false);
   },
   credentials: true
 }));
@@ -38,7 +48,10 @@ if (process.env.NODE_ENV !== 'test') {
   connectDB();
 }
 
-
+app.use((req, res, next) => {
+    console.log(req.method, req.originalUrl);
+    next();
+});
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/notes', notesRoutes);

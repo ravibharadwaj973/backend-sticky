@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../model/User');
-const { getUserIdFromToken } = require('../middleware/auth');
+const { getTokenFromRequest } = require('../middleware/auth');
 
 const router = express.Router();
 //route/auth
@@ -42,7 +42,7 @@ router.post('/register', async (req, res) => {
     // Set HTTP-only cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days in milliseconds
       path: '/',
@@ -50,6 +50,7 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({
       success:true,
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -95,7 +96,7 @@ console.log("ye chal rha hai")
     // Set HTTP-only cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days in milliseconds
       path: '/',
@@ -103,6 +104,7 @@ console.log("ye chal rha hai")
 
     res.json({
        success:true,
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -133,9 +135,7 @@ router.post('/logout', (req, res) => {
 // Get current user
 router.get('/me', async (req, res) => {
   try {
-    const token = req.cookies.token;
-     
- 
+    const token = getTokenFromRequest(req);
 
     if (!token) {
       return res.json({ user: null });

@@ -50,6 +50,7 @@ describe('Auth Endpoints', () => {
       expect(response.status).toBe(201);
       expect(response.body).toEqual({
         success: true,
+        token: expect.any(String),
         user: {
           id: 'user123',
           name: 'John Doe',
@@ -100,6 +101,7 @@ describe('Auth Endpoints', () => {
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
         success: true,
+        token: expect.any(String),
         user: {
           id: 'user123',
           name: 'John Doe',
