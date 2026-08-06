@@ -58,6 +58,7 @@ router.post('/', requireAuth, async (req, res) => {
     if (!title || !content) {
       return res.status(400).json({ error: 'Title and content are required' });
     }
+    console.log("note is initiate note")
 
     const note = await Note.create({
       title,
@@ -67,7 +68,7 @@ router.post('/', requireAuth, async (req, res) => {
       user: req.userId,
       isArchived: false
     });
-
+ console.log("note is completly saved")
     res.status(201).json({ note });
   } catch (error) {
     console.error('Error creating note:', error);
