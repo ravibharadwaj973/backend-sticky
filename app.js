@@ -7,6 +7,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const notesRoutes = require('./routes/notes');
 const uploadsRoutes = require('./routes/uploads');
+const adminRoutes = require('./routes/admin');
 const connectDB = require('./lib/dbConnect');
 
 const app = express();
@@ -17,10 +18,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://192.168.56.1:3000',
-  'http://127.0.0.1',
-  'http://43.205.206.238',           // EC2 public IP (frontend on port 80)
-  process.env.CLIENT_URL
+  'http://localhost:3001',
 ].filter(Boolean);
 
 app.use(cors({
@@ -31,7 +29,7 @@ app.use(cors({
 
     if (
       allowedOrigins.includes(origin) ||
-      /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.56\.1|43\.205\.206\.238)(:\d+)?$/.test(origin)
+      /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.56\.1|15\.206\.93\.53)(:\d+)?$/.test(origin)
     ) {
       return callback(null, true);
     }
@@ -56,6 +54,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/uploads', uploadsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

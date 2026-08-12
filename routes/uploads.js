@@ -1,7 +1,6 @@
 const express = require('express');
-const { LambdaClient, InvokeCommand } = require('@aws-sdk/client-lambda');
-const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { InvokeCommand } = require('@aws-sdk/client-lambda');
+const { lambdaClient, presignGet } = require('../lib/aws');
 const ImageNotification = require('../model/ImageNotification');
 const { requireAuth } = require('../middleware/auth');
 
@@ -10,9 +9,6 @@ const router = express.Router();
 
 // synchronous Lambda invokes cap the payload at 6MB, and base64 adds ~33%
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
-
-const lambdaClient = new LambdaClient({ region: process.env.AWS_REGION });
-const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
 const missingAwsConfig = () =>
   ['AWS_REGION', 'S3_BUCKET', 'UPLOAD_LAMBDA_NAME'].filter((name) => !process.env[name]);
@@ -87,23 +83,7 @@ router.get('/notifications', requireAuth, async (req, res) => {
       .lean();
 
     const notifications = await Promise.all(
-      docs.map(async (doc) => {
-        let url = null;
-
-        if (doc.bucket && doc.key && process.env.AWS_REGION) {
-          try {
-            url = await getSignedUrl(
-              s3Client,
-              new GetObjectCommand({ Bucket: doc.bucket, Key: doc.key }),
-              { expiresIn: 300 }
-            );
-          } catch (error) {
-            console.error('Error signing S3 url:', error);
-          }
-        }
-
-        return { ...doc, url };
-      })
+      docs.map(async (doc) => ({ ...doc, url: await presignGet(doc.bucket, doc.key) }))
     );
 
     res.json({ notifications });
