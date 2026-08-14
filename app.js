@@ -9,6 +9,7 @@ const notesRoutes = require('./routes/notes');
 const uploadsRoutes = require('./routes/uploads');
 const adminRoutes = require('./routes/admin');
 const connectDB = require('./lib/dbConnect');
+const { loadSecrets } = require('./lib/secrets');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(cookieParser());
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  process.env.CLIENT_URL,
 ].filter(Boolean);
 
 app.use(cors({
@@ -41,11 +43,6 @@ app.use(cors({
   credentials: true
 }));
 
-// Database connection
-if (process.env.NODE_ENV !== 'test') {
-  connectDB();
-}
-
 app.use((req, res, next) => {
     console.log(req.method, req.originalUrl);
     next();
@@ -67,11 +64,27 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-if (process.env.NODE_ENV !== 'test') {
+// Secrets first (they carry MONGODB_URI and JWT_SECRET), then the database,
+// then start listening. Nothing serves traffic until the config is settled.
+const start = async () => {
+  try {
+    await loadSecrets();
+  } catch (error) {
+    console.error('[secrets]', error.message);
+    console.error('[secrets] Refusing to start on possibly stale .env values.');
+    process.exit(1);
+  }
+
+  connectDB();
+
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+ app.listen(5000, "0.0.0.0", () => {
+  console.log("Backend running on port 5000");
+});
+};
+
+if (process.env.NODE_ENV !== 'test') {
+  start();
 }
 
 module.exports = app;
