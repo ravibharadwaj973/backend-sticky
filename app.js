@@ -48,6 +48,11 @@ app.use((req, res, next) => {
     next();
 });
 // Routes
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok'
+  });
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/uploads', uploadsRoutes);
@@ -78,7 +83,7 @@ const start = async () => {
   connectDB();
 
   const PORT = process.env.PORT || 5000;
- app.listen(5000, "0.0.0.0", () => {
+ app.listen(PORT, "0.0.0.0", () => {
   console.log("Backend running on port 5000");
 });
 };
