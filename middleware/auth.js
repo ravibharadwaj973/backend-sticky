@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { getJwtSecret } = require('../lib/config');
 //middleware/auth
 
 // The token can arrive as an httpOnly cookie (same-origin setups) or as an
@@ -28,7 +29,7 @@ const getUserIdFromToken = (req) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, getJwtSecret());
       resolve(decoded.userId);
     } catch (error) {
       console.error('Token verification error:', error);

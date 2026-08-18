@@ -5,12 +5,10 @@ const Note = require('../model/Note');
 const ImageNotification = require('../model/ImageNotification');
 const { requireAdmin } = require('../middleware/adminAuth');
 const { presignGet } = require('../lib/aws');
+const { getJwtSecret, getAdminCredentials, useSecureCookies } = require('../lib/config');
 
 const router = express.Router();
 //route/admin
-
-const adminEmail = () => process.env.ADMIN_EMAIL || 'ravi@gmail.com';
-const adminPassword = () => process.env.ADMIN_PASSWORD || '123456789';
 
 // Admin login (fixed credentials from env, not a database user)
 router.post('/login', (req, res) => {
@@ -22,18 +20,22 @@ router.post('/login', (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    if (email !== adminEmail() || password !== adminPassword()) {
+    // Read per request, so a rotated secret takes effect on the next restart
+    // without this module having cached anything.
+    const admin = getAdminCredentials();
+
+    if (email !== admin.email || password !== admin.password) {
       return res.status(401).json({ error: 'Invalid admin credentials' });
     }
 
     const token = jwt.sign(
       { role: 'admin', email },
-      process.env.JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: '7d' }
     );
   res.cookie('admin_token', token, {
       httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
+      secure: useSecureCookies(),
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days in milliseconds
       path: '/',

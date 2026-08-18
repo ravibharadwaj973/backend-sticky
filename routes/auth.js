@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../model/User');
 const { getTokenFromRequest } = require('../middleware/auth');
+const { getJwtSecret, useSecureCookies } = require('../lib/config');
 
 const router = express.Router();
 //route/auth
@@ -35,14 +36,14 @@ router.post('/register', async (req, res) => {
         userEmail: user.email,
         userName: user.name
       },
-      process.env.JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: '7d' }
     );
 
     // Set HTTP-only cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
+      secure: useSecureCookies(),
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days in milliseconds
       path: '/',
@@ -89,14 +90,14 @@ console.log("ye chal rha hai")
         userEmail: user.email,
         userName: user.name
       },
-      process.env.JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: '7d' }
     );
 
     // Set HTTP-only cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
+      secure: useSecureCookies(),
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days in milliseconds
       path: '/',
@@ -141,7 +142,7 @@ router.get('/me', async (req, res) => {
       return res.json({ user: null });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     
     res.json({
       user: {

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { getJwtSecret } = require('../lib/config');
 //middleware/adminAuth
 
 // The admin token arrives as the admin_token cookie or an Authorization: Bearer
@@ -24,7 +25,7 @@ const requireAdmin = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
 
     if (decoded.role !== 'admin') {
       return res.status(403).json({ error: 'Admin access required' });

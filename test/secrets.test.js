@@ -46,6 +46,15 @@ describe('loadSecrets', () => {
       expect(mockSend).not.toHaveBeenCalled();
       expect(process.env.JWT_SECRET).toBe('from-dotenv');
     });
+
+    it('still refuses to boot when .env is missing a required key', async () => {
+      process.env.MONGODB_URI = 'mongodb://localhost:27017/dev';
+      // JWT_SECRET deliberately absent
+
+      await expect(loadSecrets()).rejects.toThrow(
+        'Missing required config from .env: JWT_SECRET'
+      );
+    });
   });
 
   describe('when AWS_SECRET_NAME is set', () => {
@@ -146,7 +155,9 @@ describe('loadSecrets', () => {
     it('throws when a required key is missing from the secret', async () => {
       mockSend.mockResolvedValue({ SecretString: JSON.stringify({ ADMIN_EMAIL: 'a@b.com' }) });
 
-      await expect(loadSecrets()).rejects.toThrow(/missing required keys: JWT_SECRET, MONGODB_URI/);
+      await expect(loadSecrets()).rejects.toThrow(
+        /Missing required config from secret "stickynoted\/backend": JWT_SECRET, MONGODB_URI/
+      );
     });
 
     it('does not treat ADMIN_* as required', async () => {
