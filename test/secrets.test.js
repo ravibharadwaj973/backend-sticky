@@ -59,7 +59,7 @@ describe('loadSecrets', () => {
 
   describe('when AWS_SECRET_NAME is set', () => {
     beforeEach(() => {
-      process.env.AWS_SECRET_NAME = 'stickynoted/backend';
+      process.env.AWS_SECRET_NAME = 'sticky-keys';
     });
 
     it('puts every key from the secret into process.env', async () => {
@@ -90,7 +90,7 @@ describe('loadSecrets', () => {
       await loadSecrets();
 
       expect(mockSend).toHaveBeenCalledWith(
-        expect.objectContaining({ input: { SecretId: 'stickynoted/backend' } })
+        expect.objectContaining({ input: { SecretId: 'sticky-keys' } })
       );
       expect(SecretsManagerClient).toHaveBeenCalledWith(
         expect.objectContaining({ region: 'ap-south-1' })
@@ -156,7 +156,7 @@ describe('loadSecrets', () => {
       mockSend.mockResolvedValue({ SecretString: JSON.stringify({ ADMIN_EMAIL: 'a@b.com' }) });
 
       await expect(loadSecrets()).rejects.toThrow(
-        /Missing required config from secret "stickynoted\/backend": JWT_SECRET, MONGODB_URI/
+        /Missing required config from secret "sticky-keys": JWT_SECRET, MONGODB_URI/
       );
     });
 

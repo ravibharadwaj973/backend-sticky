@@ -4,6 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "start": "node app.js",
+    "check-secret": "node scripts/check-secret.js",
     "test": "jest --runInBand --detectOpenHandles"
   },
   "keywords": [],
