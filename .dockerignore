@@ -1,0 +1,19 @@
+# Never bake real secrets into the image. Without this, `COPY . .` copies .env
+# in, and the container silently runs on those values instead of Secrets
+# Manager — which is exactly how a missing AWS_SECRET_NAME goes unnoticed.
+.env
+.env.*
+!.env.example
+
+# Copied from the builder stage; letting the host's copy overwrite it would
+# ship whatever platform/arch happened to be installed locally.
+node_modules
+npm-debug.log*
+
+# Not needed at runtime. scripts/ is kept deliberately so you can exec into a
+# running container and `npm run check-secret` to see where config came from.
+test
+.git
+.gitignore
+Dockerfile
+.dockerignore

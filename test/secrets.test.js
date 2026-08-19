@@ -47,6 +47,26 @@ describe('loadSecrets', () => {
       expect(process.env.JWT_SECRET).toBe('from-dotenv');
     });
 
+    // The exact production bug: a service came up on .env values because
+    // AWS_SECRET_NAME was never set on it, and nothing complained.
+    it('refuses to start in production rather than silently using .env', async () => {
+      process.env.NODE_ENV = 'production';
+      process.env.JWT_SECRET = 'baked-into-the-image';
+      process.env.MONGODB_URI = 'mongodb://baked-into-the-image/db';
+
+      await expect(loadSecrets()).rejects.toThrow(/AWS_SECRET_NAME is not set/);
+      await expect(loadSecrets()).rejects.toThrow(/sticky-keys/);
+      expect(mockSend).not.toHaveBeenCalled();
+    });
+
+    it('still allows the .env fallback outside production', async () => {
+      process.env.NODE_ENV = 'development';
+      process.env.JWT_SECRET = 'from-dotenv';
+      process.env.MONGODB_URI = 'mongodb://localhost:27017/dev';
+
+      await expect(loadSecrets()).resolves.toEqual({ source: 'env', keys: [] });
+    });
+
     it('still refuses to boot when .env is missing a required key', async () => {
       process.env.MONGODB_URI = 'mongodb://localhost:27017/dev';
       // JWT_SECRET deliberately absent

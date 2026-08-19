@@ -73,7 +73,10 @@ app.use((req, res) => {
 // then start listening. Nothing serves traffic until the config is settled.
 const start = async () => {
   try {
-    await loadSecrets();
+    const { source } = await loadSecrets();
+    // Printed on every boot so CloudWatch shows at a glance whether this
+    // container is on the real secret or on a .env that got baked in.
+    console.log(`[backend] config source: ${source}`);
   } catch (error) {
     console.error('[secrets]', error.message);
     console.error('[secrets] Refusing to start on possibly stale .env values.');
